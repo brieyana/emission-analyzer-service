@@ -1,9 +1,10 @@
 # Emission Analyzer API
 
-To run this application, you must have Docker installed.
+## Prerequisites
+Ensure you have Docker installed before running this application.
 
 ## Environment Variables
-Create a `.env` file in the root directory of the project and use these environment variables:
+Create a `.env` file in the root directory of the project and define the following variables:
 
 ```
 POSTGRES_NAME=
@@ -14,14 +15,26 @@ POSTGRES_PORT=
 API_PORT=
 ```
 
-## Docker Commands
-Once you have created the `.env` file and the environment variables, 
-run `docker-compose build`. This will run the commands in the `Dockerfile` to set up the application.
+## Running the Application
+1. Build the Docker container by running:
+    ```
+    docker-compose build
+    ```
+    This command executes the instructions in the `Dockerfile` to set up the application.
 
-After that, run `docker-compose up`.
+2. Start the containers by running:
+    ```
+    docker-compose up
+    ```
 
 ## Testing
-Once everything is running, you can check that it works by going to this URL: http://localhost:8000/emission_analyzer_api/
+* Verify the API is running by visiting: http://localhost:8000/emission_analyzer_api/
 
-You can also check that the data is in the database by running 
-`docker exec -it emission-analyzer-db psql -U user -d emissionanalyzer`  and then `SELECT * FROM emission_analyzer_api_user;`.
+* Check the database by running:
+    ```
+    docker exec -it emission-analyzer-db psql -U user -d emissionanalyzer
+    ```
+    Then execute:
+    ```
+    SELECT * FROM emission_analyzer_api_user;
+    ```
