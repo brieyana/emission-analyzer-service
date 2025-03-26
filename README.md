@@ -28,13 +28,23 @@ API_PORT=
     ```
 
 ## Testing
-* Verify the API is running by visiting: http://localhost:8000/emission_analyzer_api/
+* Verify the server is running by visiting: `http://localhost:{API_PORT}/emission_analyzer_api/`
 
+* For migrations, run:
+    ```
+    docker exec -it emission-analyzer-api python manage.py migrate
+    ```
 * Check the database by running:
     ```
-    docker exec -it emission-analyzer-db psql -U user -d emissionanalyzer
+    docker exec -it emission-analyzer-db psql -U user -d {POSTGRES_NAME}
     ```
     Then execute:
     ```
-    SELECT * FROM emission_analyzer_api_user;
+    \dt
     ```
+    You should see all the data tables. 
+    
+## References
+* [psql Meta-Commands](https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-PATTERNS)
+
+* [SQL Commands Supported by PostgreSQL](https://www.postgresql.org/docs/current/sql-commands.html)
