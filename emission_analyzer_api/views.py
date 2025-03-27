@@ -66,14 +66,18 @@ def addEngine(request):
             except EngineType.DoesNotExist:
                 return JsonResponse({ "error": "engine type not found" }, status=404)
 
-            engine = Engine.objects.create(
-                user=user,
-                engine_identification=engine_id,
-                engine_type=engine_type,  # CHANGE: Pass engine_type object, not type name
-                rated_thrust=rated_thrust,
-                bp_ratio=bp_ratio,
-                pressure_ratio=pressure_ratio
-            )
+            # error case 8
+            if Engine.objects.filter(engine_identification=engine_id).exists():
+                return JsonResponse({ "error": "engine already exists" }, status=400)
+            else:
+                engine = Engine.objects.create(
+                    user=user,
+                    engine_identification=engine_id,
+                    engine_type=engine_type,  # CHANGE: Pass engine_type object, not type name
+                    rated_thrust=rated_thrust,
+                    bp_ratio=bp_ratio,
+                    pressure_ratio=pressure_ratio
+                )
 
             return JsonResponse({
                 "message": "engine successfully created",
