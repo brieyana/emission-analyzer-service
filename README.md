@@ -42,7 +42,7 @@ API_PORT=
     ```
     \dt
     ```
-    You should see all the data tables. 
+    You should see all the data tables. The data tables created from our migrations should start with `emission_analyzer_api`.
     
 ## References
 * [psql Meta-Commands](https://www.postgresql.org/docs/current/app-psql.html#APP-PSQL-PATTERNS)
