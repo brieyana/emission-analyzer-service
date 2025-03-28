@@ -7,6 +7,20 @@ def index(request):
     return HttpResponse("This is the Emission Analyzer API index.")
 
 @csrf_exempt
+def getUser(request, user_id):
+    if request.method == "GET":
+        try:
+            user = User.objects.get(user_id=user_id)
+
+            if user:
+                return JsonResponse({ "user_id": user_id }, status=200)
+            
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        
+    return JsonResponse({"error": "invalid request method"}, status=405)
+
+@csrf_exempt
 def addUser(request):
     if request.method == "POST":
         try:

@@ -1,1 +1,4 @@
 .env
+api/__pycache__/*
+emission_analyzer_api/__pycache__/*
+emission_analyzer_api/migrations/__pycache__/*
