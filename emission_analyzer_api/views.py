@@ -21,6 +21,37 @@ def getUser(request, user_id):
     return JsonResponse({"error": "invalid request method"}, status=405)
 
 @csrf_exempt
+def getEngines(request, user_id):
+    if request.method == "GET":
+        try:
+            user = User.objects.get(user_id=user_id)
+            
+            # Get all engines for this user
+            engines = Engine.objects.filter(user=user)
+            
+            # Format engines as a list of dictionaries
+            engines_list = []
+            for engine in engines:
+                engines_list.append({
+                    "engine_identification": engine.engine_identification,
+                    "engine_type": engine.engine_type.type,
+                    "rated_thrust": float(engine.rated_thrust),
+                    "bp_ratio": float(engine.bp_ratio),
+                    "pressure_ratio": float(engine.pressure_ratio)
+                })
+            
+            # Return the user_id and list of engines
+            return JsonResponse({
+                "user_id": user_id,
+                "engines": engines_list
+            }, status=200)
+            
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        
+    return JsonResponse({"error": "invalid request method"}, status=405)
+
+@csrf_exempt
 def addUser(request):
     if request.method == "POST":
         try:
