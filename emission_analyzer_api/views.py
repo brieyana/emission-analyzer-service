@@ -112,8 +112,8 @@ def addEngine(request):
                 return JsonResponse({ "error": "engine type not found" }, status=404)
 
             # error case 8
-            if Engine.objects.filter(engine_identification=engine_id).exists():
-                return JsonResponse({ "error": "engine already exists" }, status=400)
+            if Engine.objects.filter(user=user, engine_identification=engine_id).exists():
+                return JsonResponse({ "error": "engine already associated with user" }, status=400)
             else:
                 engine = Engine.objects.create(
                     user=user,
