@@ -36,6 +36,22 @@ services:
       POSTGRES_HOST: db
     env_file:
       - .env
+  
+  model:
+    build:
+      context: ${PATH_TO_MODEL}
+    container_name: emission-analyzer-model
+    restart: always
+    ports:
+      - "${MODEL_PORT}:${MODEL_PORT}"
+    networks:
+      - emission-analyzer-service_default
+    command: ["./server.sh"]
 
 volumes:
   postgres_data:
+
+networks:
+  emission-analyzer-service_default:
+    external: true
+    

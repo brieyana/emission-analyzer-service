@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models import JSONField
 
 # models
 class User(models.Model):
@@ -25,3 +26,16 @@ class Engine(models.Model):
                 name='unique_user_engine_identification'
             )
         ]
+
+class EmissionType(models.Model):
+    name = models.CharField(max_length=20, unique=True, null=False)
+
+class EmissionClass(models.Model):
+    label = models.CharField(max_length=20, unique=True, null=False)
+
+class Prediction(models.Model):
+    engine = models.ForeignKey(Engine, on_delete=models.CASCADE, null=False)
+    emission_type = models.ForeignKey(EmissionType, on_delete=models.CASCADE, null=False)
+    emission_class = models.ForeignKey(EmissionClass, on_delete=models.CASCADE, null=False)
+    confidence_levels = JSONField(default=dict)
+    created_at = models.DateTimeField(default=timezone.now, null=False)

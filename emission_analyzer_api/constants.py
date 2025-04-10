@@ -1,0 +1,8 @@
+HTTP_METHOD_POST = "POST"
+HTTP_METHOD_GET = "GET"
+HTTP_METHOD_PUT = "PUT"
+HTTP_METHOD_DELETE = "DELETE"
+
+BP_RATIO = "bp_ratio"
+PRESSURE_RATIO = "pressure_ratio"
+RATED_THRUST = "rated_thrust"

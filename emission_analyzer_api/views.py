@@ -2,10 +2,34 @@ from django.http import HttpResponse, JsonResponse
 import json
 from .models import User, Engine, EngineType
 from django.views.decorators.csrf import csrf_exempt
+from .services import perform_prediction
+from .utils import parse_request_body, validate_keys
+from .constants import *
 
 def index(request):
     return HttpResponse("This is the Emission Analyzer API index.")
 
+@csrf_exempt
+def predictEmissions(request):
+    if request.method != HTTP_METHOD_POST:
+        return JsonResponse({ "error": "invalid request method" }, status=405)
+    
+    try:
+        data = parse_request_body(request)
+        validate_keys(data, [BP_RATIO, PRESSURE_RATIO, RATED_THRUST])
+        
+        result = perform_prediction(
+            data[BP_RATIO], data[PRESSURE_RATIO], data[RATED_THRUST]
+        )
+        
+        return JsonResponse({ "predictions": result }, status=200)
+
+    except ValueError as ve:
+        return JsonResponse({ "error": str(ve) }, status=400)
+    except Exception as e:
+        return JsonResponse({ "error": str(e) }, status=500)
+    
+    
 @csrf_exempt
 def getUser(request, user_id):
     if request.method == "GET":
