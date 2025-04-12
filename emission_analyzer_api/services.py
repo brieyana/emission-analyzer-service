@@ -1,6 +1,8 @@
 import socket
 import os
 from .utils import parse_model_output
+from .models import *
+from .constants import *
 
 def perform_prediction(bp_ratio, pressure_ratio, rated_thrust):
     try:
@@ -16,3 +18,10 @@ def perform_prediction(bp_ratio, pressure_ratio, rated_thrust):
         raise Exception(f"Decode error: {str(e)}")
 
     return parse_model_output(output)
+    
+def edit_engine(engine, engine_type, data):    
+    engine.engine_type = engine_type
+    engine.bp_ratio = data[BP_RATIO]
+    engine.pressure_ratio = data[PRESSURE_RATIO]
+    engine.rated_thrust = data[RATED_THRUST]
+    engine.save()
