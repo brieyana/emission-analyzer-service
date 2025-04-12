@@ -1,13 +1,50 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 import json
 from .models import User, Engine, EngineType
 from django.views.decorators.csrf import csrf_exempt
-from .services import perform_prediction
-from .utils import parse_request_body, validate_keys
+from .services import *
+from .utils import *
 from .constants import *
+from .helpers import *
 
 def index(request):
     return HttpResponse("This is the Emission Analyzer API index.")
+
+@csrf_exempt
+def getEngineTypes(request):
+    if request.method != HTTP_METHOD_GET:
+        return JsonResponse({ "error": "Invalid request method" })
+    
+    types = []
+    for type in EngineType.objects.all():
+        types.append(type.type)
+    
+    return JsonResponse({ "engine_types": types })
+
+
+@csrf_exempt
+def editEngine(request):
+    if request.method != HTTP_METHOD_PUT:
+        return JsonResponse({ "error": "Invalid request method" })
+    
+    try:
+        data = parse_request_body(request)
+        validate_keys(data, [USER_ID, ENGINE])
+        validate_keys(data[ENGINE], [ENGINE_ID, ENGINE_TYPE, BP_RATIO, PRESSURE_RATIO, RATED_THRUST])
+        user = validate_user(data[USER_ID])
+        engine_type = validate_engine_type(data[ENGINE][ENGINE_TYPE])
+
+        engine = Engine.objects.get(user=user, engine_identification=data[ENGINE][ENGINE_ID])
+        edit_engine(engine, engine_type, data[ENGINE])
+
+        return JsonResponse({ "message": "Engine updated successfully" }, status=200)
+
+    except Http404 as e:
+        return JsonResponse({ "error": str(e)}, status=404)
+    except ValueError as ve:
+        return JsonResponse({ "error": str(ve) }, status=400)
+    except Exception as e:
+        return JsonResponse({ "error": str(e) }, status=500)
 
 @csrf_exempt
 def predictEmissions(request):

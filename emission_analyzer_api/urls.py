@@ -8,5 +8,7 @@ urlpatterns = [
     path("add-engine/", addEngine, name="add_engine"),
     path("get_user/<str:user_id>", getUser, name="get_user"),
     path("get-engines/<str:user_id>", getEngines, name="get_engines"),
-    path("predict_emissions", predictEmissions, name="predict_emissions")
+    path("predict_emissions", predictEmissions, name="predict_emissions"),
+    path("edit_engine", editEngine, name="edit_engine"),
+    path("get_engine_types", getEngineTypes, name="get_engine_types")
 ]
