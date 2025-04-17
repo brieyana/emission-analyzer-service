@@ -125,11 +125,46 @@ def predictEmissions(request):
     
     try:
         data = parse_request_body(request)
-        validate_keys(data, [BP_RATIO, PRESSURE_RATIO, RATED_THRUST])
         
+        # Validate required fields in request payload
+        validate_keys(data, [USER_ID, ENGINE_ID])
+        user_id = data[USER_ID]
+        engine_id = data[ENGINE_ID]
+        
+        # Validate user exists
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({ "error": "User not found" }, status=404)
+        
+        # Validate engine exists for this user
+        try:
+            engine = Engine.objects.get(user=user, engine_identification=engine_id)
+        except Engine.DoesNotExist:
+            return JsonResponse({ "error": "Engine not found for this user" }, status=404)
+        
+        # Use engine parameters from database to perform prediction
         result = perform_prediction(
-            data[BP_RATIO], data[PRESSURE_RATIO], data[RATED_THRUST]
+            float(engine.bp_ratio), 
+            float(engine.pressure_ratio), 
+            float(engine.rated_thrust)
         )
+        
+        # Store prediction results in the database
+        for emission_type_name, prediction_data in result.items():
+            # Get or create the EmissionType
+            emission_type, _ = EmissionType.objects.get_or_create(name=emission_type_name)
+            
+            # Get or create the EmissionClass
+            emission_class, _ = EmissionClass.objects.get_or_create(label=prediction_data["Class"])
+            
+            # Create the Prediction record
+            Prediction.objects.create(
+                engine=engine,
+                emission_type=emission_type,
+                emission_class=emission_class,
+                confidence_levels=prediction_data["Confidence"]
+            )
         
         return JsonResponse({ "predictions": result }, status=200)
 
