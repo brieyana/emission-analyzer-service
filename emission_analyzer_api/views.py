@@ -1,6 +1,5 @@
-from django.http import HttpResponse, JsonResponse, Http404
-import json
-from .models import User, Engine, EngineType
+from django.http import HttpResponse, JsonResponse
+from .models import Engine
 from django.views.decorators.csrf import csrf_exempt
 from .services import *
 from .utils import *
@@ -12,43 +11,116 @@ def index(request):
 
 @csrf_exempt
 def getEngineTypes(request):
-    if request.method != HTTP_METHOD_GET:
-        return JsonResponse({ "error": "Invalid request method" })
+    if request.method != HTTP_METHOD.GET:
+        return error_response(
+            "Invalid request method",
+            ErrorCode.INVALID_METHOD,
+            ErrorType.CLIENT,
+            400
+        )
     
-    types = []
-    for type in EngineType.objects.all():
-        types.append(type.type)
+    types = get_engines_types()
     
-    return JsonResponse({ "engine_types": types })
+    return Success({"engine_types": types}, "Retrieved engine types").to_json()
 
+@csrf_exempt
+def getUser(request, user_id):
+    if request.method != HTTP_METHOD.GET:
+        return error_response(
+            "Invalid request method",
+            ErrorCode.INVALID_METHOD,
+            ErrorType.CLIENT,
+            400
+        )
+    
+    try:
+        user = get_user(user_id)
+
+        response = Success({ "user_id": user.user_id }, "User retrieved")
+        return response.to_json()
+
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status)
+        
+
+@csrf_exempt
+def getEngines(request, user_id):
+    if request.method != HTTP_METHOD.GET:
+        return error_response(
+            "Invalid request method",
+            ErrorCode.INVALID_METHOD,
+            ErrorType.CLIENT,
+            400
+        )
+    try:
+        user = get_user(user_id)
+        engines = get_engines(user)
+
+        response = Success({ "user_id": user_id, "engines": engines }, "Engines retrieved")
+        return response.to_json()
+
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status)
+    
+@csrf_exempt
+def addEngine(request):
+    try:
+        if request.method != HTTP_METHOD.POST:
+            raise Error("Invalid request method", ErrorCode.INVALID_METHOD, ErrorType.CLIENT, 400)
+        
+        data = parse_request_body(request)
+        user, engine_type = request_validation(data)
+
+        if Engine.objects.filter(user=user, engine_identification=data[ENGINE][ENGINE_ID]).exists():
+            raise Error("Engine already associated with user", ErrorCode.ALREADY_EXISTS, ErrorType.CLIENT, status=400)
+        
+        engine = add_engine(data, user, engine_type)
+
+        response = PostSuccess(engine.to_json(), "Engine successfully added")
+        return response.to_json()
+    
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status)
 
 @csrf_exempt
 def editEngine(request):
-    if request.method != HTTP_METHOD_PUT:
-        return JsonResponse({ "error": "Invalid request method" })
-    
     try:
+        if request.method != HTTP_METHOD.PUT:
+            raise Error("Invalid request method", ErrorCode.INVALID_METHOD, ErrorType.CLIENT, 400)
+        
         data = parse_request_body(request)
-        validate_keys(data, [USER_ID, ENGINE])
-        validate_keys(data[ENGINE], [ENGINE_ID, ENGINE_TYPE, BP_RATIO, PRESSURE_RATIO, RATED_THRUST])
-        user = validate_user(data[USER_ID])
-        engine_type = validate_engine_type(data[ENGINE][ENGINE_TYPE])
+        user, engine_type = request_validation(data)
 
         engine = Engine.objects.get(user=user, engine_identification=data[ENGINE][ENGINE_ID])
-        edit_engine(engine, engine_type, data[ENGINE])
+        engine = edit_engine(engine, engine_type, data[ENGINE])
 
-        return JsonResponse({ "message": "Engine updated successfully" }, status=200)
+        response = Success(engine.to_json(), "Engine updated successfully")
+        return response.to_json()
 
-    except Http404 as e:
-        return JsonResponse({ "error": str(e)}, status=404)
-    except ValueError as ve:
-        return JsonResponse({ "error": str(ve) }, status=400)
-    except Exception as e:
-        return JsonResponse({ "error": str(e) }, status=500)
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status)
+    
+@csrf_exempt
+def createUser(request):
+    try:
+        if request.method != HTTP_METHOD.POST:
+            raise Error("Invalid request method", ErrorCode.INVALID_METHOD, ErrorType.CLIENT, 400)
+        
+        data = parse_request_body(request)
+        validate_keys(data, [USER_ID])
+        user, created = create_user(data[USER_ID])
 
+        if created:
+            return PostSuccess({ "user_id": user.user_id }, "User created").to_json()
+        else:
+            return Success({ "user_id": user.user_id }, "User already exists").to_json()
+
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status)
+    
 @csrf_exempt
 def predictEmissions(request):
-    if request.method != HTTP_METHOD_POST:
+    if request.method != HTTP_METHOD.POST:
         return JsonResponse({ "error": "invalid request method" }, status=405)
     
     try:
@@ -61,146 +133,5 @@ def predictEmissions(request):
         
         return JsonResponse({ "predictions": result }, status=200)
 
-    except ValueError as ve:
-        return JsonResponse({ "error": str(ve) }, status=400)
-    except Exception as e:
-        return JsonResponse({ "error": str(e) }, status=500)
-    
-    
-@csrf_exempt
-def getUser(request, user_id):
-    if request.method == "GET":
-        try:
-            user = User.objects.get(user_id=user_id)
-
-            if user:
-                return JsonResponse({ "user_id": user_id }, status=200)
-            
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-        
-    return JsonResponse({"error": "invalid request method"}, status=405)
-
-@csrf_exempt
-def getEngines(request, user_id):
-    if request.method == "GET":
-        try:
-            user = User.objects.get(user_id=user_id)
-            
-            # Get all engines for this user
-            engines = Engine.objects.filter(user=user)
-            
-            # Format engines as a list of dictionaries
-            engines_list = []
-            for engine in engines:
-                engines_list.append({
-                    "engine_identification": engine.engine_identification,
-                    "engine_type": engine.engine_type.type,
-                    "rated_thrust": float(engine.rated_thrust),
-                    "bp_ratio": float(engine.bp_ratio),
-                    "pressure_ratio": float(engine.pressure_ratio)
-                })
-            
-            # Return the user_id and list of engines
-            return JsonResponse({
-                "user_id": user_id,
-                "engines": engines_list
-            }, status=200)
-            
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'User not found'}, status=404)
-        
-    return JsonResponse({"error": "invalid request method"}, status=405)
-
-@csrf_exempt
-def addUser(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body) #loads json data into a dictionary
-            user_id = data.get("user_id") #extracts 'user_id' from json body
-
-            if not user_id:
-                return JsonResponse({ "error": "missing user_id" }, status=400)
-            
-            user, created = User.objects.get_or_create(user_id=user_id) #creates a new user if it doesn't exist, otherwise returns the existing user
-
-            if created:
-                return JsonResponse({ "message": "user created successfully", "user_id": user.user_id }, status=201) #201 creates data
-            else:
-                return JsonResponse({ "message": "user already exists", "user_id": user.user_id }, status=200) #200 returns existing data
-            
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "invalid JSON format"}, status=400)
-
-    return JsonResponse({"error": "invalid request method"}, status=405)
-
-@csrf_exempt
-def addEngine(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)  # Load JSON from request body
-
-            user_id = data.get("user_id")
-            engine_data = data.get("engine")
-
-            # error case 1
-            if not user_id:
-                return JsonResponse({ "error": "missing user id" }, status=400)
-            # error case 2
-            if not engine_data:
-                return JsonResponse({ "error": "missing engine data" }, status=400)
-
-            engine_id = engine_data.get("engine_identification")
-            engine_type_name = engine_data.get("engine_type")
-            rated_thrust = engine_data.get("rated_thrust")
-            bp_ratio = engine_data.get("bp_ratio")
-            pressure_ratio = engine_data.get("pressure_ratio")
-
-            # error case 3
-            if not all([engine_id, engine_type_name, rated_thrust, bp_ratio, pressure_ratio]):
-                return JsonResponse({ "error": "missing 1+ engine fields" }, status=400)
-
-            # error case 4
-            try:
-                user = User.objects.get(user_id=user_id)
-            except User.DoesNotExist:
-                return JsonResponse({ "error": "user does not exist" }, status=404)
-
-            # error case 5
-            try:
-                engine_type = EngineType.objects.get(type=engine_type_name)
-            except EngineType.DoesNotExist:
-                return JsonResponse({ "error": "engine type not found" }, status=404)
-
-            # error case 8
-            if Engine.objects.filter(user=user, engine_identification=engine_id).exists():
-                return JsonResponse({ "error": "engine already associated with user" }, status=400)
-            else:
-                engine = Engine.objects.create(
-                    user=user,
-                    engine_identification=engine_id,
-                    engine_type=engine_type,  # CHANGE: Pass engine_type object, not type name
-                    rated_thrust=rated_thrust,
-                    bp_ratio=bp_ratio,
-                    pressure_ratio=pressure_ratio
-                )
-
-            return JsonResponse({
-                "message": "engine successfully created",
-                "engine": {
-                    "user": user.user_id,
-                    "engine_identification": engine.engine_identification,
-                    "engine_type_id": engine_type.id,
-                    "engine_type": engine_type.type,
-                    "rated_thrust": float(engine.rated_thrust),  # Convert Decimal to float
-                    "bp_ratio": float(engine.bp_ratio),  # Convert Decimal to float
-                    "pressure_ratio": float(engine.pressure_ratio)  # Convert Decimal to float
-                }
-            }, status=201)
-
-        # error case 6
-        except json.JSONDecodeError:
-            return JsonResponse({ "error": "invalid JSON format" }, status=400)
-
-    # error case 7
-    return JsonResponse({ "error": "invalid request method" }, status=405)
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status, e.status)
