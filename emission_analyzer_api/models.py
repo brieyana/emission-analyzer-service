@@ -26,6 +26,16 @@ class Engine(models.Model):
                 name='unique_user_engine_identification'
             )
         ]
+    
+    def to_json(self):
+        return {
+            "engine_identification": self.engine_identification,
+            "engine_type": self.engine_type.type,
+            "rated_thrust": self.rated_thrust,
+            "bp_ratio": self.bp_ratio,
+            "pressure_ratio": self.pressure_ratio,
+            "user_id": self.user.user_id
+        }
 
 class EmissionType(models.Model):
     name = models.CharField(max_length=20, unique=True, null=False)
