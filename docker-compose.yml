@@ -46,7 +46,7 @@ services:
       - "${MODEL_PORT}:${MODEL_PORT}"
     networks:
       - emission-analyzer-service_default
-    command: ["./server.sh"]
+    command: sh ./server.sh
 
 volumes:
   postgres_data:
