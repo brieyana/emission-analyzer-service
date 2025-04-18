@@ -28,7 +28,15 @@ def get_user(user_id):
         return User.objects.get(user_id=user_id)
     except User.DoesNotExist:
         raise Error("User not found", ErrorCode.USER_NOT_FOUND, ErrorType.CLIENT, 404)
-    
+
+def delete_engine(user, engine_id):
+    try:
+        deleted, _ = Engine.objects.filter(user=user, engine_identification=engine_id).delete()
+
+        if deleted == 0:
+            raise Engine.DoesNotExist
+    except Engine.DoesNotExist:
+        raise Error("Engine not associated with user", ErrorCode.ENGINE_NOT_FOUND, ErrorType.CLIENT, 404)
 
 def get_engine(user, engine_id):
     try:

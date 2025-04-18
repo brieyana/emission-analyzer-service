@@ -10,5 +10,6 @@ urlpatterns = [
     path("get-engines/<str:user_id>", getEngines, name="get_engines"),
     path("predict_emissions", predictEmissions, name="predict_emissions"),
     path("edit_engine", editEngine, name="edit_engine"),
-    path("get_engine_types", getEngineTypes, name="get_engine_types")
+    path("get_engine_types", getEngineTypes, name="get_engine_types"),
+    path("delete_engine/<str:user_id>/engines/<str:engine_id>", deleteEngine, name="delete_engine")
 ]
