@@ -10,6 +10,24 @@ def index(request):
     return HttpResponse("This is the Emission Analyzer API index.")
 
 @csrf_exempt
+def deleteEngine(request, user_id, engine_id):
+    if request.method != HTTP_METHOD.DELETE:
+        return error_response(
+            "Invalid request method",
+            ErrorCode.INVALID_METHOD,
+            ErrorType.CLIENT,
+            400
+        )
+    
+    try:
+        user = get_user(user_id)
+        delete_engine(user, engine_id)
+
+        return HttpResponse(status=204)
+    except Error as e:
+        return error_response(str(e), e.code, e.type, e.status)
+
+@csrf_exempt
 def getEngineTypes(request):
     if request.method != HTTP_METHOD.GET:
         return error_response(
