@@ -29,6 +29,14 @@ def get_user(user_id):
     except User.DoesNotExist:
         raise Error("User not found", ErrorCode.USER_NOT_FOUND, ErrorType.CLIENT, 404)
     
+
+def get_engine(user, engine_id):
+    try:
+        return Engine.objects.get(user=user, engine_identification=engine_id)
+    except Engine.DoesNotExist:
+        raise Error("Engine not found", ErrorCode.ENGINE_NOT_FOUND, ErrorType.CLIENT, 404)
+    
+
 def get_engines_types():
     try:
         types = []

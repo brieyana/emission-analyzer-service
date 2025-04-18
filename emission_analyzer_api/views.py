@@ -125,10 +125,20 @@ def predictEmissions(request):
     
     try:
         data = parse_request_body(request)
-        validate_keys(data, [BP_RATIO, PRESSURE_RATIO, RATED_THRUST])
         
+        # Validate required fields in request payload
+        validate_keys(data, [USER_ID, ENGINE_ID])
+        user_id = data[USER_ID]
+        engine_id = data[ENGINE_ID]
+
+        user = get_user(user_id)
+        engine = get_engine(user, engine_id)
+        
+        # Use engine parameters from database to perform prediction
         result = perform_prediction(
-            data[BP_RATIO], data[PRESSURE_RATIO], data[RATED_THRUST]
+            float(engine.bp_ratio), 
+            float(engine.pressure_ratio), 
+            float(engine.rated_thrust)
         )
         
         return JsonResponse({ "predictions": result }, status=200)
