@@ -43,10 +43,12 @@ class EngineModelTest(TestCase):
             Engine.objects.create(**engine_data)
 
     def test_missing_engine_type(self):
-        """Test that missing engine type raises IntegrityError (engine_type must be present)"""
+        """Test that missing engine type raises ValidationError (engine_type must be present)"""
         engine_data = self.generate_engine_data(engine_type=None)
-        with self.assertRaises(IntegrityError):
-            Engine.objects.create(**engine_data)
+        engine = Engine(**engine_data)
+        with self.assertRaises(ValidationError):
+            engine.full_clean()
+
 
     def test_missing_identification(self):
         """Test that missing engine_identification raises ValidationError (engine_identification is required)"""
