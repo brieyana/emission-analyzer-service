@@ -80,7 +80,7 @@ def add_engine(data, user, engine_type):
         raise Error("Database error", ErrorCode.VALIDATION_ERROR, ErrorType.DATABASE, status=400)
 
 def get_engines(user):
-    engines = Engine.objects.filter(user=user)
+    engines = Engine.objects.filter(user=user).order_by('created_at')
 
     engines_list = []
     for engine in engines:
