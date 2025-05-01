@@ -12,7 +12,7 @@ class EngineType(models.Model):
 
 class Engine(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
-    engine_type = models.ForeignKey(EngineType, on_delete=models.SET_NULL, null=True)
+    engine_type = models.ForeignKey(EngineType, on_delete=models.CASCADE, null=False) #Engine type is now required to be enforced
     engine_identification = models.CharField(max_length=100, null=False, unique=False)
     rated_thrust = models.DecimalField(max_digits=10, decimal_places=2, null=False)
     bp_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=False)
