@@ -27,15 +27,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-gt-c)_&+e_i_(8p0@+f3@m0fj9of32%7&@+dn=snq^-0zs91k#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+port = os.getenv('APP_PORT', 'LOCAL_APP_PORT')
 
-port = os.getenv('APP_PORT', '5173')
+ALLOWED_HOSTS = ['localhost']
 
 CORS_ALLOWED_ORIGINS = [
     f"http://localhost:{port}",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    f'http://localhost:{port}',
+]
+
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Application definition
 

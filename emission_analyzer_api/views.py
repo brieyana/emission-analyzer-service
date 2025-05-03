@@ -1,15 +1,16 @@
 from django.http import HttpResponse, JsonResponse
 from .models import Engine
-from django.views.decorators.csrf import csrf_exempt
 from .services import *
 from .utils import *
 from .constants import *
 from .helpers import *
+from django.views.decorators.csrf import ensure_csrf_cookie
 
-def index(request):
-    return HttpResponse("This is the Emission Analyzer API index.")
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({"detail": "CSRF cookie set"})
 
-@csrf_exempt
+
 def deleteEngine(request, user_id, engine_id):
     if request.method != HTTP_METHOD.DELETE:
         return error_response(
@@ -27,7 +28,6 @@ def deleteEngine(request, user_id, engine_id):
     except Error as e:
         return error_response(str(e), e.code, e.type, e.status)
 
-@csrf_exempt
 def getEngineTypes(request):
     if request.method != HTTP_METHOD.GET:
         return error_response(
@@ -41,7 +41,6 @@ def getEngineTypes(request):
     
     return Success({"engine_types": types}, "Retrieved engine types").to_json()
 
-@csrf_exempt
 def getUser(request, user_id):
     if request.method != HTTP_METHOD.GET:
         return error_response(
@@ -60,8 +59,6 @@ def getUser(request, user_id):
     except Error as e:
         return error_response(str(e), e.code, e.type, e.status)
         
-
-@csrf_exempt
 def getEngines(request, user_id):
     if request.method != HTTP_METHOD.GET:
         return error_response(
@@ -79,8 +76,7 @@ def getEngines(request, user_id):
 
     except Error as e:
         return error_response(str(e), e.code, e.type, e.status)
-    
-@csrf_exempt
+
 def addEngine(request):
     try:
         if request.method != HTTP_METHOD.POST:
@@ -100,7 +96,6 @@ def addEngine(request):
     except Error as e:
         return error_response(str(e), e.code, e.type, e.status)
 
-@csrf_exempt
 def editEngine(request):
     try:
         if request.method != HTTP_METHOD.PUT:
@@ -118,7 +113,6 @@ def editEngine(request):
     except Error as e:
         return error_response(str(e), e.code, e.type, e.status)
     
-@csrf_exempt
 def createUser(request):
     try:
         if request.method != HTTP_METHOD.POST:
@@ -135,8 +129,7 @@ def createUser(request):
 
     except Error as e:
         return error_response(str(e), e.code, e.type, e.status)
-    
-@csrf_exempt
+
 def predictEmissions(request):
     if request.method != HTTP_METHOD.POST:
         return JsonResponse({ "error": "invalid request method" }, status=405)
