@@ -27,9 +27,8 @@ services:
     depends_on:
       - db
     environment:
-      START_CMD: "python manage.py migrate && 
-        python manage.py runserver 0.0.0.0:${API_PORT}"
-      DJANGO_SETTINGS_MODULE: "api.settings.dev"
+      DJANGO_SETTINGS_MODULE: "api.settings.prod"
+      START_CMD: "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn api.wsgi:application --bind 0.0.0.0:${API_PORT}"
     env_file:
       - .env
   
@@ -50,4 +49,3 @@ volumes:
 networks:
   emission-analyzer-service_default:
     external: true
-    
