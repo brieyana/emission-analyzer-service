@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-gt-c)_&+e_i_(8p0@+f3@m0fj9of32%7&@+dn=snq^-0zs91k#
 
 CORS_ALLOW_CREDENTIALS = True
 
-port = os.getenv('APP_PORT')
+port = os.getenv('APP_PORT', '8000')
 
 # Application definition
 
